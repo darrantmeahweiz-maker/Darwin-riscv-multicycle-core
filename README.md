@@ -1,6 +1,6 @@
 # 🚀 Darrant-V1: 32-bit RISC-V Multi-Cycle Processor Core
 
-Hello! I'm Darrant Meah Wei Zhe, a first-year Electrical Engineering undergraduate at Universiti Malaya. Welcome to the repository of **Darrant-V1**.
+Hello! I'm Darrant Meah Wei Zhe, a first-year Electrical Engineering undergraduate at Universiti Malaya (2025/2026). Welcome to the repository of **Darrant-V1**.
 
 This project is not just another textbook CPU. It is the result of countless hours of RTL coding, tearing down Verilog state machines, chasing elusive timing bugs, and running automated physical implementations. I built this 32-bit RISC-V multi-cycle processor core from the ground up to deeply understand computer architecture, hardware-software co-design, and industrial verification flows.
 
