@@ -14,81 +14,59 @@ module CRC(
     output reg [31:0] CRC_Result
 );
 
-    // -----------------------------------------------------------------
-    // Function: CRC-8 Calculation (Polynomial: 8'h07 - x^8 + x^2 + x + 1)
-    // -----------------------------------------------------------------
-    function [7:0] CRC8 (input [31:0] data, input [31:0] seed);
+    // CRC8 logic (Branchless Optimization)
+    function [7:0] CRC8 (input [31:0] data, input [31:0] seed); //8'h07
         reg [7:0] crc;
+        reg inv;
         integer i;
         begin
             crc = seed[7:0];
-            for (i = 31; i >= 0; i = i - 1) begin
-                if (crc[7] ^ data[i]) begin
-                    crc = (crc << 1) ^ 8'h07;
-                end else begin
-                    crc = crc << 1;
-                end
+            for (i=31; i>=0; i = i -1) begin
+                inv = crc[7] ^ data[i];
+                crc = (crc << 1) ^ ({8{inv}} & 8'h07);
             end
             CRC8 = crc;
         end
     endfunction
 
-    // -----------------------------------------------------------------
-    // Function: CRC-16 Calculation (Polynomial: 16'h8005 - CCITT/IBM standard)
-    // -----------------------------------------------------------------
-    function [15:0] CRC16 (input [31:0] data, input [31:0] seed);
+    // CRC16 logic (Branchless Optimization)
+    function [15:0] CRC16 (input [31:0] data, input [31:0] seed); //16'h8005
         reg [15:0] crc;
+        reg inv;
         integer i;
         begin
             crc = seed[15:0];
-            for (i = 31; i >= 0; i = i - 1) begin
-                if (crc[15] ^ data[i]) begin
-                    crc = (crc << 1) ^ 16'h8005;
-                end else begin
-                    crc = crc << 1;
-                end
+            for (i=31; i>=0; i = i -1) begin
+                inv = crc[15] ^ data[i];
+                crc = (crc << 1) ^ ({16{inv}} & 16'h8005);
             end
             CRC16 = crc;
         end
     endfunction
 
-    // -----------------------------------------------------------------
-    // Function: CRC-32 Calculation (Polynomial: 32'h04C11DB7 - IEEE 802.3)
-    // -----------------------------------------------------------------
-    function [31:0] CRC32 (input [31:0] data, input [31:0] seed);
+    // CRC32 logic (Branchless Optimization)
+    function [31:0] CRC32 (input [31:0] data, input [31:0] seed); //32'h04C11DB7
         reg [31:0] crc;
+        reg inv;
         integer i;
         begin
             crc = seed;
-            for (i = 31; i >= 0; i = i - 1) begin
-                if (crc[31] ^ data[i]) begin
-                    crc = (crc << 1) ^ 32'h04C11DB7;
-                end else begin
-                    crc = crc << 1;
-                end
+            for (i=31; i>=0; i = i -1) begin
+                inv = crc[31] ^ data[i];
+                crc = (crc << 1) ^ ({32{inv}} & 32'h04C11DB7);
             end
             CRC32 = crc;
         end
     endfunction
 
-    // Parallel instantiation of three independent calculation datapaths
-    wire [7:0]  crc8_out;
-    wire [15:0] crc16_out;
-    wire [31:0] crc32_out;
-
-    assign crc8_out  = CRC8(i_A, i_B);  // Process CRC-8
-    assign crc16_out = CRC16(i_A, i_B); // Process CRC-16
-    assign crc32_out = CRC32(i_A, i_B); // Process CRC-32
-
-    // Multiplexer to select active CRC operation result
     always @(*) begin
-        if (CRC_Enable == 0) begin
-            CRC_Result = 32'h00000000; // Output zero when disabled
+        if (CRC_Enable == 1'b0) begin
+            CRC_Result = 32'h00000000;
         end else begin 
             case (CRC_Control)
-                4'h0:    CRC_Result = {24'h000000, crc8_out}; // CRC-8
-                4'h1:    CRC_Result = {16'h0000, crc16_out};  // CRC-16
-                4'h2:    CRC_Result = crc32_out;              // CRC-32
+                4'h0: CRC_Result = {24'h000000, CRC8(i_A, i_B)};
+                4'h1: CRC_Result = {16'h0000, CRC16(i_A, i_B)};
+                4'h2: CRC_Result = CRC32(i_A, i_B);
                 default: CRC_Result = 32'h00000000;
             endcase
         end
